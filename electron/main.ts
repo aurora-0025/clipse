@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut, Menu, nativeImage, net, protocol, Tray } from "electron";
+import { app, BrowserWindow, globalShortcut, Menu, nativeImage, protocol, Tray } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadIPCMainApi } from "./api/api";
@@ -97,16 +97,21 @@ app.on("activate", () => {
   }
 });
 
-const protocolName = "clipse";
-protocol.registerSchemesAsPrivileged([
-  { scheme: protocolName, privileges: { bypassCSP: true } }
-])
+// const protocolName = "clipse";
+// protocol.registerSchemesAsPrivileged([
+//   { scheme: protocolName, privileges: { bypassCSP: true } }
+// ])
 
 app.whenReady().then(async () => {
-  protocol.handle('clipse', (request) => {
-    const filePath = request.url.slice('clipse://'.length)
-    return net.fetch(filePath)
-  })
+  protocol.registerFileProtocol("clipse", (request, callback) => {
+    const url = request.url.replace("clipse://", "");
+    try {
+      return callback(url);
+    } catch (err) {
+      console.error(err);
+      return callback("404");
+    }
+  });
   tray = new Tray(nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, "electron-vite.svg")))
   const contextMenu = Menu.buildFromTemplate([
     {
