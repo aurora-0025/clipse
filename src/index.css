@@ -23,3 +23,9 @@ body {
 *::-webkit-scrollbar-track {
     background-color: rgba(0,0,0,0);
 }
+
+.overflow-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
