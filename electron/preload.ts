@@ -18,6 +18,10 @@ export const api = {
   write_config: (config: ConfigData) => {
     return ipcRenderer.invoke("write_config", config);
   },
+  // DnD
+  start_drag: (filePaths: string[]) => {
+    ipcRenderer.send("start_drag", filePaths)
+  },
   // Database
   index_files: (paths: string[]) => {
     return ipcRenderer.invoke("index_files", paths);
@@ -27,6 +31,9 @@ export const api = {
   remove_index_progress_listener: () => ipcRenderer.removeAllListeners("index-process"),
   simple_search: (query: string) => {
     return ipcRenderer.invoke("simple_search", query);
+  },
+  vector_search: (query: string) => {
+    return ipcRenderer.invoke("vector_search", query);
   },
 };
 

@@ -28,3 +28,6 @@ dist-ssr
 file_index.sqlite
 file_index.sqlite-shm
 file_index.sqlite-wal
+
+/sidecar/data
+/sidecar/__pycache__

@@ -5,6 +5,7 @@ import path from "node:path";
 import { ConfigData } from "../typings/config";
 import { db, processDirectories } from "./file_indexer";
 import { readConfig, writeConfig } from "../helpers/config";
+const API_BASE_URL = 'http://localhost:8000';
 // Database()
 
 const configPath = path.join(app.getPath("userData"), "config.json");
@@ -59,6 +60,21 @@ export const loadIPCMainApi = (win: BrowserWindow) => {
       },
     },
     {
+      channel: "start_drag",
+      action: "on",
+      listener: async (event, filePaths: string[]) => {
+        console.log(filePaths);
+        
+        for (let i = 0; i < filePaths.length; i++) {
+          const path = filePaths[i];
+          event.sender.startDrag({
+            file: path,
+            icon: path,
+          });
+        }
+      },
+    },
+    {
       channel: "index_files",
       action: "handle",
       listener: async (_event, paths: string[]) => {
@@ -81,13 +97,59 @@ export const loadIPCMainApi = (win: BrowserWindow) => {
             WHERE filename LIKE ?
           `);
 
-          const results = stmt.all(`%${query}%`) as { path: string, filename: string }[];
-          const new_results = results.map(p => { return {path: p.path, name: p.filename, ext: path.extname(p.path)}});
+          const results = stmt.all(`%${query.split(" ").join("_")}%`) as {
+            path: string;
+            filename: string;
+          }[];
+          const new_results = results.map((p) => {
+            return {
+              path: p.path,
+              name: p.filename,
+              ext: path.extname(p.path),
+            };
+          });
           return new_results;
         } catch (error) {
           console.error("Error performing simple search:", error);
           return [];
         }
+      },
+    },
+    {
+      channel: "vector_search",
+      action: "handle",
+      listener: async (_event, query: string) => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/search`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ query })
+          });
+
+          if (response.ok) {
+              const data = await response.json();
+              console.log(data);
+              const result = data.path.map((p: string)=> {
+                return {
+                  path: p,
+                  name: p.split(/[/\\]/).pop(),
+                  ext: path.extname(p),
+                };
+              })
+              console.log(result);
+              
+              return result
+          } else {
+              const errorData = await response.json();
+              console.error(errorData);
+              return [];
+          }
+      } catch (error) {
+          console.error("Error searching images:", error);
+          return [];
+      }
       },
     },
   ];

@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useEffect, useState } from "react";
 import { ConfigData } from "../../electron/typings/config";
 
-export const ConfigContext = createContext<
+const ConfigContext = createContext<
   | {
       configData: ConfigData;
       setConfigData: React.Dispatch<React.SetStateAction<ConfigData>>;
@@ -13,7 +13,7 @@ interface Props {
   children?: ReactNode;
 }
 
-export const ConfigContextProvider = ({ children }: Props): React.ReactNode => {
+const ConfigContextProvider = ({ children }: Props): React.ReactNode => {
   const [configData, setConfigData] = useState<ConfigData>({ paths: [] });
 
   /* TODO: READ CONFIG */
@@ -31,3 +31,5 @@ export const ConfigContextProvider = ({ children }: Props): React.ReactNode => {
     </ConfigContext.Provider>
   );
 };
+
+export { ConfigContextProvider, ConfigContext }

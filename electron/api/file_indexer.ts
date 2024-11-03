@@ -7,6 +7,7 @@ import Database from "better-sqlite3";
 
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
+const API_BASE_URL = 'http://localhost:8000';
 
 interface ImageRow {
   path: string;
@@ -187,6 +188,27 @@ async function processDirectories(
       allImageFiles = allImageFiles.concat(imageFiles);
     }
     console.log(`Found ${allImageFiles.length} image files`);
+
+      try {
+          const response = await fetch(`${API_BASE_URL}/index`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ paths: allImageFiles })
+          });
+
+          if (response.ok) {
+              const data = await response.json();
+              return data.paths ?? [];
+          } else {
+              const errorData = await response.json();
+              console.error("Error indexing images:", errorData);
+          }
+      } catch (error) {
+          console.error("Error indexing images:", error);
+      }
+
     await processFilesInBatches(allImageFiles, batchSize);
     deleteUnprocessedPaths(allImageFiles);
   } catch (error) {

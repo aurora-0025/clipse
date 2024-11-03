@@ -1,9 +1,17 @@
-import { app, BrowserWindow, globalShortcut, Menu, nativeImage, protocol, Tray } from "electron";
+import {
+  app,
+  BrowserWindow,
+  globalShortcut,
+  Menu,
+  nativeImage,
+  protocol,
+  Tray,
+} from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadIPCMainApi } from "./api/api";
 import { startWatcher, stopAllWatchers } from "./helpers/watcher";
-import { readConfig } from "./helpers/config";
+import { configData, readConfig } from "./helpers/config";
 import { db, startInitialIndex } from "./api/file_indexer";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,7 +36,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null;
-let tray = null
+let tray = null;
 
 function createWindow() {
   win = new BrowserWindow({
@@ -58,7 +66,7 @@ function createWindow() {
     }
   });
 
-  // win.webContents.openDevTools({ mode: "detach" });
+  win.webContents.openDevTools({ mode: "detach" });
 
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
@@ -73,9 +81,11 @@ function createWindow() {
   }
   loadIPCMainApi(win!);
 
-  win?.on("blur", () => {
-    win?.hide();
-  });
+  // win?.on("blur", () => {
+  //   if (configData?.paths && configData.paths.length > 0) {
+  //     win?.hide();
+  //   }
+  // });
 }
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -112,24 +122,28 @@ app.whenReady().then(async () => {
       return callback("404");
     }
   });
-  tray = new Tray(nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, "electron-vite.svg")))
+  tray = new Tray(
+    nativeImage.createFromPath(
+      path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    ),
+  );
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Show',
+      label: "Show",
       click: () => {
-          win?.show();
-          win?.focus();
-      }
-  },
-  {
-      label: 'Quit',
+        win?.show();
+        win?.focus();
+      },
+    },
+    {
+      label: "Quit",
       click: () => {
-          app.quit();
-      }
-  }
-  ])
-  tray.setToolTip('This is my application.')
-  tray.setContextMenu(contextMenu)
+        app.quit();
+      },
+    },
+  ]);
+  tray.setToolTip("This is my application.");
+  tray.setContextMenu(contextMenu);
   const configPaths = readConfig()?.paths as string[];
   if (configPaths) {
     console.log("Started Initial Indexing!");

@@ -2,14 +2,19 @@ import { useContext, useEffect } from "react";
 import { ConfigContext } from "./context/ConfigContext";
 import FirstRun from "./windows/FirstRun";
 import Search from "./windows/Search";
+import {
+  SelectedContextProvider,
+} from "./context/SelectedContext";
 
 function App(): JSX.Element {
   useEffect(() => {
     const observedElement = document.body;
     if (!observedElement) return;
     const resizeWindow = () => {
+      console.log(document.body.scrollWidth);
+      
       window.api.resize_win(
-        document.body.scrollWidth > 600 ? document.body.scrollWidth : 600,
+        document.body.scrollWidth,
         document.body.scrollHeight,
       );
     };
@@ -41,8 +46,14 @@ function App(): JSX.Element {
   }, [configData]);
 
   return (
-    <div className="h-fit p-2">
-      {configData.paths.length > 0 ? <Search /> : <FirstRun />}
+    <div className="h-fit w-fit min-w-[600px] bg-zinc-300/55 p-2">
+      {configData.paths.length > 0 ? (
+        <SelectedContextProvider>
+          <Search />
+        </SelectedContextProvider>
+      ) : (
+        <FirstRun />
+      )}
     </div>
   );
 }
