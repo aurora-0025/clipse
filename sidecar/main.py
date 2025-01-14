@@ -72,8 +72,9 @@ async def search_images(request: SearchRequest):
     text_emb = search_model.encode(query)
 
     try:
-        results = tbl.search(text_emb).limit(3).to_list()
-        paths = [result.get("path") for result in results]
+        top_k = 10
+        max_distance = 0.8
+        paths = [r.get("path") for r in tbl.search(text_emb).metric('cosine').limit(top_k).to_list() if r["_distance"] < max_distance]
         return {"path": paths}
     except Exception as e:
         print(f"Search failed: {str(e)}")
