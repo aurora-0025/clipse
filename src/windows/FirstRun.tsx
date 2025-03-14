@@ -61,7 +61,7 @@ function FirstRun() {
     <div className="p-4">
       <h1 className="text-3xl font-bold">Welcome to Clipse!</h1>
       <p className="mb-3">Select the folders that you want to index below.</p>
-      <div className="mb-3 max-h-[120px] min-h-[120px] overflow-y-scroll rounded-sm bg-slate-100 p-2">
+      <div className="mb-3 overflow-y-scroll rounded-sm bg-slate-100 p-2">
         {selectedFolders.length > 0 && (
           <ul>
             {selectedFolders.map((folder, index) => (

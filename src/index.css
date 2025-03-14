@@ -2,8 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    background-color: transparent;
+@layer base {
+    html, body, #root {
+        padding: 0;
+        margin: 0;
+        height: 100% !important;
+        width: 100% !important;
+    }
+}
+
+.draggable {
+    -webkit-app-region: drag
+}
+
+.non-draggable {
+    -webkit-app-region: no-drag
 }
 
 *::-webkit-scrollbar {
@@ -21,7 +34,7 @@ body {
     min-height: 32px;
 }
 *::-webkit-scrollbar-track {
-    background-color: rgba(0,0,0,0);
+    background-color: rgb(0, 0, 0);
 }
 
 .overflow-ellipsis {

@@ -1,4 +1,4 @@
-import { ipcRenderer, contextBridge } from 'electron'
+import { ipcRenderer, contextBridge, shell } from 'electron'
 import { ConfigData } from './typings/config';
 
 // Custom APIs for renderer
@@ -35,6 +35,16 @@ export const api = {
   vector_search: (query: string) => {
     return ipcRenderer.invoke("vector_search", query);
   },
+  onIndexingStatus: (callback: (status: string) => void) => {
+    ipcRenderer.on("indexing-status", (event, status) => {
+      callback(status);
+  })},
+  get_all_images: () => {
+    return ipcRenderer.invoke("get_all_images");
+  },
+  window_minimize: () => ipcRenderer.send('window_minimize'),
+  window_close: () => ipcRenderer.send('window_close'),
+  open_file: (filePath: string) => ipcRenderer.invoke("open_file", filePath),
 };
 
 // --------- Expose some API to the Renderer process ---------
@@ -55,9 +65,16 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
   },
+  
 
   // You can expose other APTs you need here.
   // ...
 });
 
 contextBridge.exposeInMainWorld("api", api);
+
+contextBridge.exposeInMainWorld("electron", {
+  shell: {
+    openPath: (path: string) => shell.openPath(path),
+  },
+});

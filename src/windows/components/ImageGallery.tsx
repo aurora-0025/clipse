@@ -1,17 +1,17 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import "./selected.css";
 import { SelectedContext } from "../../context/SelectedContext";
+import { ImageSearchResult } from "../Search";
 
-interface ImageResult {
-  name: string;
+interface Image {
   path: string;
+  filename: string;
 }
 
 interface ImageResultProps {
-  results: ImageResult[];
+  results: ImageSearchResult[];
 }
 
-const ResultsGrid: React.FC<ImageResultProps> = ({ results }) => {
+const ImageGallery: React.FC<ImageResultProps> = ({ results }) => {
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
   const [isSelectionMode, setIsSelectionMode] = useState<boolean>(false);
   const { selectedImages, setSelectedImages } = useContext(SelectedContext)!;
@@ -49,28 +49,36 @@ const ResultsGrid: React.FC<ImageResultProps> = ({ results }) => {
         : [...prevSelected, index];
       if (updatedSelected.length === 0) {
         setIsSelectionMode(false);
-      }      
+      }
       return updatedSelected;
     });
   };
 
-  useEffect(()=> {
-    if (selectedIndexes.length > 0) setSelectedImages(selectedIndexes.map((i)=> results.at(i)!));
+  useEffect(() => {
+    if (selectedIndexes.length > 0) setSelectedImages(selectedIndexes.map((i) => results.at(i)!));
     else setSelectedImages([]);
   }, [results, selectedIndexes, setSelectedImages])
 
   // Handle click when selection mode is active
-  const handleClick = (e: React.MouseEvent<HTMLElement>, index: number) => {
+  const handleClick = (e: React.MouseEvent<HTMLElement>, index: number, path: string) => {
+    console.log("asdas");
     e.stopPropagation();
     // Ignore the click if the selection was already made by long press
+    
     if (preventClickRef.current) {
       preventClickRef.current = false; // Reset the flag for future clicks
       return;
     }
 
+    const imagePath = path.replace("clipse://", ""); // Convert to a file path
+    console.log(imagePath);
+    
+    window.api.open_file(imagePath);
+
     if (isSelectionMode) {
       toggleSelection(index); // Allow clicking to select when in selection mode
     }
+
   };
 
   const handleDragStart = (
@@ -103,38 +111,60 @@ const ResultsGrid: React.FC<ImageResultProps> = ({ results }) => {
     //   }
     // }, 0);
   };
+  const [images, setImages] = useState<Image[]>([]);
 
-  if (results.length > 0) {
-    return (
-      <div
-        onClick={() => {
-          setSelectedIndexes([]);
-        }}
-        className="mt-2 grid max-h-[200px] grid-cols-3 gap-2 overflow-y-scroll border-t border-zinc-100 px-5 pt-2"
-      >
-            {results.map((result, j) => (
-              <button
-                key={j}
-                className={`relative flex items-center justify-center rounded-lg bg-zinc-400/30 p-5 ${selectedIndexes.includes(j) ? "selected" : ""}`}
-                data-index={j}
-                onMouseDown={() => handleMouseDown(j)}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseLeave}
-                onClick={(e) => handleClick(e, j)} // Handle simple clicks for selection
-                draggable={false}
-              >
-                <img
-                  className="h-auto max-h-[40vh] max-w-full rounded-lg object-cover object-center"
-                  src={`clipse://${result.path}`}
-                  onDragStart={(event) => handleDragStart(event, j)}
-                  alt={result.name}
-                  draggable
-                />
-              </button>
-            ))}
-      </div>
-    );
-  }
+  useEffect(() => {
+    window.api.get_all_images().then((data: Image[]) => {
+      console.log(data);
+
+      setImages(data);
+    });
+  }, []);
+
+  return (
+    <div className="mt-2 grid grid-cols-3 gap-2 overflow-y-scroll px-5 pt-2 bg-zinc-800 ml-5 rounded-md h-full">
+      {results.length == 0 && (
+        <>
+          {images.map((image, i) => (
+            <button
+              onClick={(e) => handleClick(e, i, image.path)} 
+              key={image.path}
+              className={`relative flex items-center justify-center rounded-lg bg-zinc-400/30 p-5`}
+              draggable={false}
+            >
+              <img
+                className="h-auto max-h-[40vh] max-w-full rounded-lg object-cover object-center"
+                src={`clipse://${image.path}`}
+                alt={image.filename}
+                draggable
+              />
+            </button>
+          ))}
+
+        </>)}
+      {results.map((result, j) => (
+        <button
+          key={j}
+          className={`relative flex items-center justify-center rounded-lg bg-zinc-400/30 p-5 ${selectedIndexes.includes(j) ? "selected" : ""}`}
+          data-index={j}
+          onMouseDown={() => handleMouseDown(j)}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onClick={(e) => handleClick(e, j, result.path)} // Handle simple clicks for selection
+          draggable={false}
+        >
+          <img
+            className="h-auto max-h-[40vh] max-w-full rounded-lg object-cover object-center"
+            src={`clipse://${result.path}`}
+            onDragStart={(event) => handleDragStart(event, j)}
+            alt={result.name}
+            draggable
+          />
+          <div className="absolute bottom-1 right-1 px-2 bg-zinc-400/30 rounded-md ">{result.mode}</div>
+        </button>
+      ))}
+    </div>
+  );
 };
 
-export default ResultsGrid;
+export default ImageGallery;

@@ -4,6 +4,7 @@ import { promisify } from "node:util";
 import path from "node:path";
 import { createRequire } from 'node:module'
 import Database from "better-sqlite3";
+import { ipcMain } from "electron";
 
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
@@ -61,7 +62,7 @@ async function getFileStats(filePath: string): Promise<fs.Stats> {
 }
 
 async function processFile(filePath: string): Promise<void> {
-  try {
+  try {    
     const fileStats = await getFileStats(filePath);
     const mtimeMs = fileStats.mtimeMs;
     const filename = path.basename(filePath, path.extname(filePath));
@@ -200,7 +201,8 @@ async function processDirectories(
 
           if (response.ok) {
               const data = await response.json();
-              return data.paths ?? [];
+              console.log("Images indexed:", data);
+              
           } else {
               const errorData = await response.json();
               console.error("Error indexing images:", errorData);
@@ -208,7 +210,7 @@ async function processDirectories(
       } catch (error) {
           console.error("Error indexing images:", error);
       }
-
+    
     await processFilesInBatches(allImageFiles, batchSize);
     deleteUnprocessedPaths(allImageFiles);
   } catch (error) {

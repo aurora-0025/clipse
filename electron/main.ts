@@ -41,13 +41,13 @@ let tray = null;
 function createWindow() {
   win = new BrowserWindow({
     vibrancy: "fullscreen-ui", // on MacOS
-    backgroundMaterial: "acrylic",
+    // backgroundMaterial: "acrylic",
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
-    width: 600,
-    height: 200,
+    minWidth: 800,
+    minHeight: 600,
     frame: false,
     center: true,
-    resizable: false,
+    resizable: true,
     minimizable: false,
     skipTaskbar: true,
     webPreferences: {
@@ -66,7 +66,7 @@ function createWindow() {
     }
   });
 
-  win.webContents.openDevTools({ mode: "detach" });
+  win.webContents.openDevTools();
 
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
@@ -149,8 +149,8 @@ app.whenReady().then(async () => {
     console.log("Started Initial Indexing!");
     await startInitialIndex(configPaths);
     console.log("Finished Initial Indexing!");
-    console.log("Started watcher!");
-    await startWatcher(configPaths);
+    // console.log("Started watcher!");
+    // await startWatcher(configPaths);
   }
   createWindow();
 });

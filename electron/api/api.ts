@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import { IpcMainAPIEntry } from "../typings/api";
 import fs from "node:fs";
 import path from "node:path";
@@ -131,15 +131,19 @@ export const loadIPCMainApi = (win: BrowserWindow) => {
           if (response.ok) {
               const data = await response.json();
               console.log(data);
-              const result = data.path.map((p: string)=> {
+              const result = data.results.map((p: {
+                path: string;
+                mode: "CLIP" | "OCR";
+                distance: number;
+              })=> {
                 return {
-                  path: p,
-                  name: p.split(/[/\\]/).pop(),
-                  ext: path.extname(p),
+                  path: p.path,
+                  name: p.path.split(/[/\\]/).pop(),
+                  ext: path.extname(p.path),
+                  mode: p.mode,
+                  distance: p.distance
                 };
-              })
-              console.log(result);
-              
+              })              
               return result
           } else {
               const errorData = await response.json();
@@ -152,6 +156,41 @@ export const loadIPCMainApi = (win: BrowserWindow) => {
       }
       },
     },
+    {
+      channel: "get_all_images",
+      action: "handle",
+      listener: async () => {
+        try {
+          const stmt = db.prepare("SELECT * FROM images");
+          const images = stmt.all();
+          return images;
+        } catch (error) {
+          console.error("Error fetching images:", error);
+          return [];
+        }
+      },
+    },
+    {
+      channel: "window_minimize",
+      action: "on",
+      listener: () => {
+        win.minimize();
+      },
+    },
+    {
+      channel: "window_close",
+      action: "on",
+      listener: () => {
+        win.close();
+      },
+    },
+    {
+      channel: "open_file",
+      action: "handle",
+      listener: async (_event, filePath: string) => {
+        return shell.openPath(filePath);
+      }
+    }
   ];
 
   ipcMainAPI.forEach((api) => {
